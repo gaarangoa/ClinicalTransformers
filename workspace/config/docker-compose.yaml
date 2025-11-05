@@ -1,0 +1,14 @@
+services:
+  clinical_transformer:
+    build: .
+    container_name: clinical_transformer
+    tty: true
+    ports:
+      - 5001:5001
+    volumes:
+      - ../:/mnt/
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    command: jupyter lab --port 5001 --ip 0.0.0.0 --allow-root --NotebookApp.token='' --NotebookApp.password=''
+    restart: always
+    working_dir: /
