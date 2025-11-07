@@ -238,6 +238,104 @@ class SelfSupervisedTransformer(tf.keras.Model):
                 
         return {m.name: m.result() for m in self.metrics}
 
+class ValueMaskedSelfSupervisedTransformer(tf.keras.Model):
+    def __init__(
+        self,
+        num_layers,
+        d_model,
+        num_heads,
+        dff,
+        num_classes,
+        num_features,
+        embedding_size,
+        max_features,
+        rate=0.3,
+        masking=True,
+        with_prior=True,
+    ):
+
+        super(ValueMaskedSelfSupervisedTransformer, self).__init__()
+
+        self.with_prior = with_prior
+        self.encoder = Encoder(
+            num_layers,
+            d_model,
+            num_heads,
+            dff,
+            num_features,
+            embedding_size,
+            max_features,
+            rate,
+            with_prior=self.with_prior,
+        )
+
+        self.value_head = tf.keras.layers.Dense(
+            1, activation="linear", name="value_output"
+        )
+        self.masking = masking
+
+    def _build_value_attention_mask(self, value_mask):
+        vm = tf.cast(value_mask, tf.float32)
+        vm_q = vm[:, :, tf.newaxis]  # (batch, seq, 1)
+        vm_k = vm[:, tf.newaxis, :]  # (batch, 1, seq)
+        pair_mask = vm_q * vm_k  # (batch, seq, seq)
+        return pair_mask[:, tf.newaxis, :, :]
+
+    def call(self, inp, training):
+        value_mask = inp[-1]
+        base_inp = list(inp[:-1])
+
+        values = base_inp[0]
+        masked_values = tf.where(
+            tf.equal(value_mask, 1.0), tf.zeros_like(values), values
+        )
+        base_inp[0] = masked_values
+
+        mask = self._build_value_attention_mask(value_mask)
+        if self.masking:
+            pad_mask = create_padding_mask(base_inp[1])
+            mask = mask + pad_mask
+
+        enc_output, attention_weights, q, k = self.encoder(
+            base_inp, training=training, mask=mask
+        )
+
+        value_output = self.value_head(enc_output)
+        return value_output, attention_weights, enc_output
+
+    def train_step(self, data):
+        X, y = data
+
+        with tf.GradientTape() as tape:
+            value_pred, _, _ = self(X, training=True)
+            loss = self.compiled_loss(y, value_pred)
+
+        gradients = tape.gradient(loss, self.trainable_variables)
+        self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+
+        for metric in self.metrics:
+            metric.update_state(
+                y[:, :, 1:], value_pred, sample_weight=y[:, :, 0]
+            )
+
+        logs = {m.name: m.result() for m in self.metrics}
+        logs["loss"] = loss
+        return logs
+
+    def test_step(self, data):
+        X, y = data
+        value_pred, _, _ = self(X, training=False)
+        loss = self.compiled_loss(y, value_pred)
+
+        for metric in self.metrics:
+            metric.update_state(
+                y[:, :, 1:], value_pred, sample_weight=y[:, :, 0]
+            )
+
+        logs = {m.name: m.result() for m in self.metrics}
+        logs["loss"] = loss
+        return logs
+
 class ClassifierTransformer(tf.keras.Model):
     '''
     '''

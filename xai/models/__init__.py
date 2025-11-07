@@ -1,9 +1,13 @@
 from .SimplifiedClinicalTransformer.Topologies.BertLikeTransformer.BertLikeAttention import ClassifierTransformer
 from .SimplifiedClinicalTransformer.Topologies.BertLikeTransformer.BertLikeAttention import SelfSupervisedTransformer
+from .SimplifiedClinicalTransformer.Topologies.BertLikeTransformer.BertLikeAttention import ValueMaskedSelfSupervisedTransformer
 from .SimplifiedClinicalTransformer.Topologies.BertLikeTransformer.BertLikeAttention import SurvivalTransformer
 from .SimplifiedClinicalTransformer.Topologies.BertLikeTransformer.DataGenerator.Classifier import DataGenerator as ClassifierDataGenerator
 from .SimplifiedClinicalTransformer.Topologies.BertLikeTransformer.DataGenerator.Survival import DataGenerator as SurvivalDataGenerator
 from .SimplifiedClinicalTransformer.Topologies.BertLikeTransformer.DataGenerator.SelfSupervised import DataGenerator as SelfSupervisedDataGenerator
+from .SimplifiedClinicalTransformer.Topologies.BertLikeTransformer.DataGenerator.ValueMaskedSelfSupervised import (
+    DataGenerator as ValueMaskedSelfSupervisedDataGenerator,
+)
 
 from .SimplifiedClinicalTransformer.Topologies.BertLikeTransformer.DataGenerator.OptimizedClassifier import DataGenerator as OptimizedClassifierDataGenerator
 from .SimplifiedClinicalTransformer.Topologies.BertLikeTransformer.DataGenerator.OptimizedSurvival import DataGenerator as OptimizedSurvivalDataGenerator
@@ -20,10 +24,12 @@ from .SimplifiedClinicalTransformer.Logger import Logger as LoggerTransformer
 __all__ = [
     ClassifierTransformer, 
     SelfSupervisedTransformer, 
+    ValueMaskedSelfSupervisedTransformer,
     SurvivalTransformer,
     ClassifierDataGenerator,
     SurvivalDataGenerator,
     SelfSupervisedDataGenerator,
+    ValueMaskedSelfSupervisedDataGenerator,
     OptimizedClassifierDataGenerator,
     OptimizedSurvivalDataGenerator,
     OptimizedSelfSupervisedDataGenerator,

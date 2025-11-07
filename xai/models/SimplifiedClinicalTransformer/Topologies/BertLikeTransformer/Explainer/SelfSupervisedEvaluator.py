@@ -1,15 +1,6 @@
 import numpy as np 
-import pandas as pd
-from sklearn.metrics.pairwise import cosine_similarity
-from scipy.stats import ttest_ind
-from scipy.stats import ttest_ind_from_stats
-from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-import tensorflow as tf 
-import os
-from xai.models import load_transformer
-
 import logging
-import sys
+
 logger = logging.getLogger('ClassifierEvaluator')
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 chandler = logging.StreamHandler()

@@ -183,6 +183,27 @@ class Trainer():
 
             self.add_mask = True
 
+        if self.mode == 'value-self-supervision':
+
+            if model:
+                self.Transformer = model
+
+            if dataloader:
+                self.DataGenerator = dataloader
+
+            if loss:
+                self.loss = loss
+            else:
+                from ...losses.selfsupervision.value_mask import ValueMaskLoss
+
+                self.loss = ValueMaskLoss()
+
+            self.metrics = []
+            if metrics:
+                self.metrics = metrics
+
+            self.add_mask = True
+
         if self.mode == 'classification':
             # Set model class
             # self.Transformer = SimplifiedClassifierTransformer 
@@ -309,6 +330,8 @@ class Trainer():
             self.num_classes = 1
         elif self.mode == 'self-supervision':
             self.num_classes = self.tokenizer.vocabulary_size
+        elif self.mode == 'value-self-supervision':
+            self.num_classes = 1
         
         logger.info('Number of classes: {}'.format(self.num_classes)) 
             
@@ -378,7 +401,7 @@ class Trainer():
                 stratify = dataset[self.target[1]]
         elif self.mode == 'classification' or self.mode == 'regression':
             stratify = dataset[self.target]
-        elif self.mode == 'self-supervision':
+        elif self.mode == 'self-supervision' or self.mode == 'value-self-supervision':
             stratify = [1]*dataset.shape[0]
         else:
             raise('Wrong mode parameter: {}'.format(self.mode))
