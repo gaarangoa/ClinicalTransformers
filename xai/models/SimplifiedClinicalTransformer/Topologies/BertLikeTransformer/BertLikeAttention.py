@@ -313,10 +313,9 @@ class ValueMaskedSelfSupervisedTransformer(tf.keras.Model):
         gradients = tape.gradient(loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
-        for metric in self.metrics:
-            metric.update_state(
-                y[:, :, 1:], value_pred, sample_weight=y[:, :, 0]
-            )
+        self.compiled_metrics.update_state(
+            y[:, :, 1:], value_pred, sample_weight=y[:, :, 0]
+        )
 
         logs = {m.name: m.result() for m in self.metrics}
         logs["loss"] = loss
@@ -327,10 +326,9 @@ class ValueMaskedSelfSupervisedTransformer(tf.keras.Model):
         value_pred, _, _ = self(X, training=False)
         loss = self.compiled_loss(y, value_pred)
 
-        for metric in self.metrics:
-            metric.update_state(
-                y[:, :, 1:], value_pred, sample_weight=y[:, :, 0]
-            )
+        self.compiled_metrics.update_state(
+            y[:, :, 1:], value_pred, sample_weight=y[:, :, 0]
+        )
 
         logs = {m.name: m.result() for m in self.metrics}
         logs["loss"] = loss
