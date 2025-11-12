@@ -12,9 +12,16 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(include=["xai*", "ctv2*"]),
     include_package_data=True,
     install_requires = [],
+    extras_require={
+        "ctv2": [
+            "torch>=2.2.0",
+            "accelerate>=0.28.0",
+            "anndata>=0.10.0",
+        ]
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: Restricted",
