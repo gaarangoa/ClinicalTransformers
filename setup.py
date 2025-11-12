@@ -20,6 +20,8 @@ setuptools.setup(
             "torch>=2.2.0",
             "accelerate>=0.28.0",
             "anndata>=0.10.0",
+            "transformers>=4.40.0",
+            "tokenizers>=0.15.2",
         ]
     },
     classifiers=[
