@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import os
 from dataclasses import dataclass, field
 from collections import OrderedDict
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
@@ -230,3 +232,58 @@ class FeatureValueTokenizer:
         adata.var = pd.DataFrame(index=self.feature_order)
         adata.obs = df.index.to_frame()
         return adata
+
+    def save_pretrained(self, save_directory: Union[str, os.PathLike]) -> None:
+        if self.tokenizer is None:
+            raise RuntimeError("Tokenizer must be fitted before saving.")
+
+        os.makedirs(save_directory, exist_ok=True)
+        config = {
+            "categorical_features": list(self.categorical_features),
+            "binary_features": list(self.binary_features),
+            "continuous_features": list(self.continuous_features),
+            "pad_token": self.pad_token,
+            "cls_token": self.cls_token,
+            "mask_token": self.mask_token,
+            "unk_token": self.unk_token,
+            "max_seq_len": self.max_seq_len,
+            "cat_maps": self.cat_maps,
+            "cat_denoms": self.cat_denoms,
+            "cont_stats": self.cont_stats,
+            "feature_order": self.feature_order,
+        }
+        config_path = os.path.join(save_directory, "feature_value_tokenizer.json")
+        with open(config_path, "w", encoding="utf-8") as fp:
+            json.dump(config, fp)
+
+    @classmethod
+    def from_pretrained(cls, load_directory: Union[str, os.PathLike]) -> "FeatureValueTokenizer":
+        config_path = os.path.join(load_directory, "feature_value_tokenizer.json")
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"No saved tokenizer found at {config_path}")
+
+        with open(config_path, "r", encoding="utf-8") as fp:
+            config = json.load(fp)
+
+        tokenizer = cls(
+            categorical_features=config["categorical_features"],
+            binary_features=config["binary_features"],
+            continuous_features=config["continuous_features"],
+            pad_token=config["pad_token"],
+            cls_token=config["cls_token"],
+            mask_token=config["mask_token"],
+            unk_token=config["unk_token"],
+            max_seq_len=config.get("max_seq_len"),
+        )
+        tokenizer.cat_maps = config["cat_maps"]
+        tokenizer.cat_denoms = config["cat_denoms"]
+        tokenizer.cont_stats = config["cont_stats"]
+        tokenizer.feature_order = config["feature_order"]
+        tokenizer.tokenizer = FeatureTokenizer(
+            features=tokenizer.feature_order,
+            pad_token=tokenizer.pad_token,
+            cls_token=tokenizer.cls_token,
+            mask_token=tokenizer.mask_token,
+            unk_token=tokenizer.unk_token,
+        )
+        return tokenizer
